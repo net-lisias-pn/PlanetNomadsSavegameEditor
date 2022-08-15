@@ -406,7 +406,7 @@ class GUI(Frame):
 		for slot in stacks:
 			print("Slot {}: {} {}".format(slot, stacks[slot].get_count(), stacks[slot].get_item_name()))
 
-	def create_item(self, item_id, amount=90):
+	def create_item(self, item_id, amount=100):
 		inventory = self.savegame.get_player_inventory()
 		if not inventory:
 			self.update_statustext("Could not load inventory")
