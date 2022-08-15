@@ -45,7 +45,7 @@ def draw(savegame, selected_machine_id:int):
 		coords[mtype]["z"].append(c[1])
 	for mtype in coords:
 		ax.scatter(np.array(coords[mtype]["x"]), np.array(coords[mtype]["y"]), np.array(coords[mtype]["z"]),
-				   c=colors[mtype], marker=markers[mtype], label=mtype)
+				c=colors[mtype], marker=markers[mtype], label=mtype)
 
 	player = savegame.get_player_position()
 	ax.scatter(np.array(player[0]), np.array(player[2]), np.array(player[1]), c="red", marker="*", label="Player")

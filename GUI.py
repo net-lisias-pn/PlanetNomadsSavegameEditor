@@ -10,7 +10,8 @@ import _tkinter
 
 from Feature import util
 from Feature import Backup, Map3D, Migration
-from PlanetNomads import Savegame
+
+import PlanetNomads
 
 version = '1.4.0'
 
@@ -319,7 +320,7 @@ class GUI(Frame):
 		"""
 		self.current_file = filename
 
-		self.savegame = Savegame.Savegame()
+		self.savegame = PlanetNomads.Savegame()
 		self.savegame.load(self.current_file)
 		self.update_statustext("Loaded game '{}'".format(self.savegame.get_name()))
 
@@ -386,7 +387,7 @@ class GUI(Frame):
 		if not inventory:
 			self.update_statustext("Could not load inventory")
 			return
-		item = Savegame.Item(item_id)
+		item = PlanetNomads.Item(item_id)
 
 		if not inventory.add_stack(item, amount):
 			messagebox.showerror(message="Could not create resource. All slots full?")
