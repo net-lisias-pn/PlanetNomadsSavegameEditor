@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from typing import Text
-import shutil, os, re
-import zipfile, sqlite3, json
+import os, re
 from math import sqrt
 
 from tkinter import *
@@ -11,19 +9,10 @@ from tkinter.scrolledtext import ScrolledText
 import _tkinter
 
 from Feature import util
+from Feature import Backup, Map3D, Migration
 from PlanetNomads import Savegame
 
 version = '1.4.0'
-
-try:
-	from mpl_toolkits.mplot3d import Axes3D  # Required for projection='3d'
-	import matplotlib.pyplot as plt
-	import numpy as np
-
-	enable_map = True
-except ImportError:
-	enable_map = False
-
 
 class GUI(Frame):
 	current_file = None
@@ -179,7 +168,7 @@ class GUI(Frame):
 	def init_basic_buttons(self, gui_main_frame):
 		gui_basic_tools_frame = ttk.Frame(gui_main_frame)
 
-		if enable_map:
+		if Map3D.enable_map:
 			gui_draw_map_button = ttk.Button(gui_basic_tools_frame, text="Draw map", command=self.draw_map)
 			gui_draw_map_button.grid(sticky=(E, W))
 			self.locked_buttons.append(gui_draw_map_button)
@@ -338,27 +327,19 @@ class GUI(Frame):
 		for button in self.locked_buttons:
 			button.state(["!disabled"])
 
-		if self.backup_exists(filename):
+		if Backup.exists(filename):
 			self.gui_restore_button.state(["!disabled"])
 		else:
 			self.gui_restore_button.state(["disabled"])
 
 		self.update_machine_select(self.savegame.machines)
 
-	def backup_exists(self, filename: Text) -> bool:
-		"""
-		Check if a backup exists for the given file
-		:param filename: Filename with absolute path
-		:return: bool
-		"""
-		return os.path.exists(filename + ".bak")
-
 	def create_backup(self):
-		if self.backup_exists(self.current_file):
+		if Backup.exists(self.current_file):
 			if not messagebox.askokcancel("Overwrite existing backup?", "A backup already exists. Overwrite it?"):
 				return
 		try:
-			shutil.copy2(self.current_file, self.current_file + ".bak")
+			Backup.create(self.current_file)
 		except IOError:
 			messagebox.showerror(message="Could not create backup file!")
 		else:
@@ -370,8 +351,7 @@ class GUI(Frame):
 		if not res:
 			return
 		try:
-			shutil.copy2(self.current_file + ".bak", self.current_file)
-			self.savegame.reset()
+			Backup.restore(self.current_file, self.savegame)
 		except IOError:
 			messagebox.showerror(message="Could not restore backup file!")
 		else:
@@ -420,52 +400,11 @@ class GUI(Frame):
 		self.create_item(110, 1)
 
 	def draw_map(self):
-		# Based on https://stackoverflow.com/questions/11140163/python-matplotlib-plotting-a-3d-cube-a-sphere-and-a-vector
-		plt.style.use('seaborn-whitegrid')
-		fig = plt.figure()
-		ax = fig.gca(projection='3d')
-
-		# see https://github.com/fabro66/GAST-Net-3DPoseEstimation/issues/51
-		#ax.set_aspect("equal")
-		ax.set_box_aspect([1,1,1])
-
-		# Draw a sphere to mimic a planet
-		u = np.linspace(0, 2 * np.pi, 100)
-		v = np.linspace(0, np.pi, 100)
-		x = self.savegame.get_planet_size() * np.outer(np.cos(u), np.sin(v))
-		y = self.savegame.get_planet_size() * np.outer(np.sin(u), np.sin(v))
-		z = self.savegame.get_planet_size() * np.outer(np.ones(np.size(u)), np.cos(v))
-		ax.plot_surface(x, y, z, rcount=18, ccount=21, alpha=0.1)
-
 		try:
 			selected_machine_id = int(self.gui_selected_machine_identifier.get())
 		except ValueError:
 			selected_machine_id = 0
-
-		colors = {"Base": "blue", "Vehicle": "orange", "Construct": "grey", "Selected": "red"}
-		markers = {"Base": "^", "Vehicle": "v", "Construct": ".", "Selected": "v"}
-		machines = self.savegame.machines
-		coords = {}
-		for m in machines:
-			c = m.get_coordinates()
-			mtype = m.get_type()
-			if m.identifier == selected_machine_id:
-				mtype = "Selected"
-			if mtype not in coords:
-				coords[mtype] = {"x": [], "y": [], "z": []}
-			coords[mtype]["x"].append(c[0])
-			coords[mtype]["y"].append(c[2])  # Flip y/z
-			coords[mtype]["z"].append(c[1])
-		for mtype in coords:
-			ax.scatter(np.array(coords[mtype]["x"]), np.array(coords[mtype]["y"]), np.array(coords[mtype]["z"]),
-					   c=colors[mtype], marker=markers[mtype], label=mtype)
-
-		player = self.savegame.get_player_position()
-		ax.scatter(np.array(player[0]), np.array(player[2]), np.array(player[1]), c="red", marker="*", label="Player")
-
-		ax.grid(False)  # Hide grid lines
-		ax.legend()
-		plt.show()
+		Map3D.draw(self.savegame, selected_machine_id)
 
 	def randomize_machine_color(self):
 		machine = self.get_selected_machine()
@@ -499,33 +438,7 @@ class GUI(Frame):
 		self.savegame.save()
 
 	def export_save(self):
-		zipdir = os.path.dirname(self.current_file)
-		save_id = re.search(r"_(\d+)\.db$", self.current_file).group(1)
-
-		# Load _main.db for meta data
-		dbconnector = sqlite3.connect(os.path.join(zipdir, "_main.db"))
-		maindb = dbconnector.cursor()
-		maindb.row_factory = sqlite3.Row
-		maindb.execute("select * from saves where id = ?", (save_id,))
-		row = maindb.fetchone()
-		metadata = {}
-		for k in row.keys():
-			metadata[k] = row[k]
-		del (metadata["id"], metadata["thumbnail"])
-
-		# Generate a safe name from the saved game title
-		zipname = "{}.pnsave.zip".format(re.sub(r"[^a-zA-Z0-9._-]+", "-", metadata["name"]))
-		fullname = os.path.join(zipdir, zipname)
-
-		# Open zip file and write save and meta. Try to compress it
-		try:
-			myzip = zipfile.ZipFile(fullname, "w", zipfile.ZIP_BZIP2)
-		except RuntimeError:
-			myzip = zipfile.ZipFile(fullname, "w")
-		stripped_name = "save_00.db"
-		myzip.write(self.current_file, arcname=stripped_name)
-		myzip.writestr("meta.json", json.dumps(metadata))
-		myzip.close()
+		zipname, zipdir = Migration.save_export(self.current_file)
 		self.update_statustext("Exported current save to %s\n in %s" % (zipname, zipdir))
 
 	def import_save(self):
@@ -549,26 +462,9 @@ class GUI(Frame):
 			self.update_statustext("Can't import without _main.db")
 			return
 
-		# Load _main.db
-		dbconnector = sqlite3.connect(mainfile)
-		maindb = dbconnector.cursor()
-		maindb.execute("select max(id) from saves")
-		next_id = maindb.fetchone()[0] + 1
-
-		# Load zip
 		try:
-			with zipfile.ZipFile(importfilename) as myzip:
-				myzip.extract("save_00.db")
-				# TODO detect correct file name scheme from existing saves
-				shutil.move("save_00.db", os.path.join(os.path.dirname(mainfile), "save_%i.db" % next_id))
-				metajson = myzip.read("meta.json")
-				meta = json.loads(metajson)
-				maindb.execute(
-					"insert into saves (type, id_master_autosave, name, created, modified, base_seed_string, "
-					"world_name) values (:type, -1, :name, :created, :modified, :base_seed_string, :world_name)",
-					meta)
-				dbconnector.commit()
-				self.update_statustext("Imported %s game '%s' as id %i" % (meta["type"], meta["name"], next_id))
+			meta, next_id = Migration.save_import(mainfile, importfilename)
+			self.update_statustext("Imported %s game '%s' as id %i" % (meta["type"], meta["name"], next_id))
 		except RuntimeError:
 			self.update_statustext("Could not load the exported file.\n Maybe the bzip2 extension is missing.")
 		except OSError:
