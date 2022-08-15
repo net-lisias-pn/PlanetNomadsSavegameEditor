@@ -429,7 +429,10 @@ class GUI(Frame):
 		plt.style.use('seaborn-whitegrid')
 		fig = plt.figure()
 		ax = fig.gca(projection='3d')
-		ax.set_aspect("equal")
+
+		# see https://github.com/fabro66/GAST-Net-3DPoseEstimation/issues/51
+		#ax.set_aspect("equal")
+		ax.set_box_aspect([1,1,1])
 
 		# Draw a sphere to mimic a planet
 		u = np.linspace(0, 2 * np.pi, 100)
