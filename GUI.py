@@ -10,6 +10,7 @@ from tkinter import ttk, filedialog, messagebox, colorchooser
 from tkinter.scrolledtext import ScrolledText
 import _tkinter
 
+from Feature import util
 from PlanetNomads import Savegame
 
 version = '1.4.0'
@@ -88,7 +89,7 @@ class GUI(Frame):
 		self.gui_selected_machine_identifier.trace('w', self.on_machine_selected)
 
 		self.gui_machine_select = ttk.Combobox(frame, textvariable=self.gui_selected_machine_identifier,
-											values=self.machine_select_options, state='readonly')
+											   values=self.machine_select_options, state='readonly')
 		self.gui_machine_select.grid(sticky=(E, W))
 		self.locked_buttons.append(self.gui_machine_select)
 
@@ -97,7 +98,7 @@ class GUI(Frame):
 		teleport_tools.grid(sticky=(N, E, S, W))
 
 		gui_push_machine_button = ttk.Button(teleport_tools, text="Teleport selected machine",
-											command=self.teleport_machine)
+											 command=self.teleport_machine)
 		gui_push_machine_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_push_machine_button)
 
@@ -107,7 +108,7 @@ class GUI(Frame):
 		self.gui_teleport_distance = IntVar(self.parent)
 		self.gui_teleport_distance.set(20)
 		self.gui_teleport_distance_button = ttk.Entry(teleport_tools, textvariable=self.gui_teleport_distance,
-													justify="center", width=5)
+													  justify="center", width=5)
 		self.gui_teleport_distance_button.grid(row=0, column=2)
 
 		label = ttk.Label(teleport_tools, text=" meters over ")
@@ -143,13 +144,13 @@ class GUI(Frame):
 		machine_list = []
 
 		for m in machines:
-			type = m.get_type()
+			_type = m.get_type()
 			name_id = m.get_name_or_id()
-			if type == "Construct" and m.get_name() == "":
+			if _type == "Construct" and m.get_name() == "":
 				continue  # 300+ wrecks are just too much
-			machine_list.append("{} {} [{}]".format(type, name_id, m.identifier))
-			target.add_command(label="{} {}".format(type, name_id),
-							command=lambda value=m.identifier: self.gui_teleport_machine_target.set(value))
+			machine_list.append("{} {} [{}]".format(_type, name_id, m.identifier))
+			target.add_command(label="{} {}".format(_type, name_id),
+							   command=lambda value=m.identifier: self.gui_teleport_machine_target.set(value))
 		machine_list.sort()
 		self.machine_select_options.extend(machine_list)
 		self.gui_machine_select["values"] = self.machine_select_options
@@ -160,7 +161,7 @@ class GUI(Frame):
 		gui_dev_tools_frame = ttk.Frame(gui_main_frame)
 
 		gui_inventory_button = ttk.Button(gui_dev_tools_frame, text="List player inventory",
-										command=self.list_inventory)
+										  command=self.list_inventory)
 		gui_inventory_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_inventory_button)
 
@@ -169,8 +170,8 @@ class GUI(Frame):
 		self.locked_buttons.append(gui_machines_button)
 
 		gui_teleport_northpole_button = ttk.Button(gui_dev_tools_frame,
-												text="Teleport player to north pole (death possible)",
-												command=self.teleport_northpole)
+												   text="Teleport player to north pole (death possible)",
+												   command=self.teleport_northpole)
 		gui_teleport_northpole_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_teleport_northpole_button)
 		return gui_dev_tools_frame
@@ -280,7 +281,7 @@ class GUI(Frame):
 		gui_resource_menu.add_command(label="Uranium", command=lambda: self.create_item(61))
 		gui_resource_menu.add_command(label="Enriched Uranium", command=lambda: self.create_item(63))
 		gui_resource_menubutton = ttk.Menubutton(gui_cheats_frame, text="Cheat: add stack of resource",
-												menu=gui_resource_menu)
+												 menu=gui_resource_menu)
 		gui_resource_menubutton.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_resource_menubutton)
 
@@ -295,7 +296,7 @@ class GUI(Frame):
 		self.locked_buttons.append(gui_item_menubutton)
 
 		gui_unlock_button = ttk.Button(gui_cheats_frame, text="Cheat: give Mk4 equipment",
-									command=self.create_mk4_equipment)
+									   command=self.create_mk4_equipment)
 		gui_unlock_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_unlock_button)
 		return gui_cheats_frame
@@ -457,7 +458,7 @@ class GUI(Frame):
 			coords[mtype]["z"].append(c[1])
 		for mtype in coords:
 			ax.scatter(np.array(coords[mtype]["x"]), np.array(coords[mtype]["y"]), np.array(coords[mtype]["z"]),
-					c=colors[mtype], marker=markers[mtype], label=mtype)
+					   c=colors[mtype], marker=markers[mtype], label=mtype)
 
 		player = self.savegame.get_player_position()
 		ax.scatter(np.array(player[0]), np.array(player[2]), np.array(player[1]), c="red", marker="*", label="Player")
