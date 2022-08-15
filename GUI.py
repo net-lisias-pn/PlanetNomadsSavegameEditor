@@ -14,7 +14,7 @@ import sqlite3
 import json
 from math import sqrt
 
-version = '1.3.0'
+version = '1.4.0'
 
 try:
     from mpl_toolkits.mplot3d import Axes3D  # Required for projection='3d'
