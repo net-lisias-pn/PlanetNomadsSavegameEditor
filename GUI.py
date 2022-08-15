@@ -315,14 +315,8 @@ class GUI(Frame):
 		Show file select dialog
 		:return: None
 		"""
-		opts = {"filetypes": [("PN save files", "save_*.db"), ("All files", ".*")]}
-		os_name = platform.system()
-		if os_name == "Linux":
-			opts["initialdir"] = os.path.expanduser("~/.config/unity3d/Craneballs/PlanetNomads/")
-		elif os_name == "Windows":
-			opts["initialdir"] = os.path.expanduser("~\AppData\LocalLow\Craneballs\PlanetNomads")
-		# TODO MAC > USERS > [Your Username] > Library > Application Support > unity.Craneballs.PlanetNomads
-
+		opts = {"filetypes": [("PN save files", "*.db"), ("All files", "*.*")]}
+		opts["initialdir"] = util.solve_savedir()
 		filename = filedialog.askopenfilename(**opts)
 		if not filename:
 			return
@@ -535,13 +529,8 @@ class GUI(Frame):
 
 	def import_save(self):
 		# Select import file
-		opts = {"filetypes": [("PN export files", "*.pnsave.zip"), ("All files", ".*")]}
-		os_name = platform.system()
-		if os_name == "Linux":
-			opts["initialdir"] = os.path.expanduser("~/.config/unity3d/Craneballs/PlanetNomads/")
-		elif os_name == "Windows":
-			opts["initialdir"] = os.path.expanduser("~\AppData\LocalLow\Craneballs\PlanetNomads")
-		# TODO mac
+		opts = {"filetypes": [("PN export files", "*.pnsave.zip"), ("All files", "*.*")]}
+		opts["initialdir"] = util.solve_savedir()
 		importfilename = filedialog.askopenfilename(**opts)
 		if not importfilename:
 			return
