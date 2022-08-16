@@ -138,26 +138,26 @@ class Block:
 		155: "Amor Ramp - Kickstarter",             # Kickstarter part. Not available for non kickstarters
 		156: "Armor Ramp Slope - Kickstarter",      # Kickstarter part. Not available for non kickstarters
 		157: "Armor Slope - Kickstarter",           # Kickstarter part. Not available for non kickstarters
-		158: "Basic Wall Mk2",                      # Not available to the user
+		158: "Basic Wall Mk2 - Kickstarter",        # Kickstarter part. Not available for non kickstarters
 		159: "Basic Wall - Kickstarter",            # Kickstarter part. Not available for non kickstarters
 
-		161: "Short Basic Slope Wall (with tube)",  # Not available to the user
-		162: "Short Basic Slope Wall",              # Not available to the user
-		163: "Connection Wall",                     # Not available to the user
-		164: "Short Basic Slope Corner Wall",       # Not available to the user
+		161: "Short Basic Slope Wall (with tube) - Kickstarter",  # Kickstarter part. Not available for non kickstarters
+		162: "Short Basic Slope Wall - Kickstarter",              # Kickstarter part. Not available for non kickstarters
+		163: "Connection Wall - Kickstarter",                     # Kickstarter part. Not available for non kickstarters
+		164: "Short Basic Slope Corner Wall - Kickstarter",       # Kickstarter part. Not available for non kickstarters
 		165: "Corner Wall - Kickstarter",           # Kickstarter part. Not available for non kickstarters
-		166: "Basic Wall with Door",                # Not available to the user
+		166: "Basic Wall with Door - Kickstarter",  # Kickstarter part. Not available for non kickstarters
 		167: "Short Basic Slope Wall 1x4",
 		168: "Pylon with light",
 		169: "Outer Window with (band)",            # Kickstarter part. Not available for non kickstarters
 		170: "Outer Window",
 		171: "Slope Outer Window",
-		172: "Short Basic Pylon",                   # Not available to the user
+		172: "Short Basic Pylon - Kickstarter",     # Kickstarter part. Not available for non kickstarters
 		173: "Small Plant Pot",
 		174: "Replicator",
-		175: "Short Basic Slope Pylon",             # Not available to the user
-		176: "Basic Wall 3x7",                      # Not available to the user
-		177: "Base Foundation",                     # Not available to the user
+		175: "Short Basic Slope Pylon - Kickstarter",  # Kickstarter part. Not available for non kickstarters
+		176: "Basic Wall 3x7 - Kickstarter",           # Kickstarter part. Not available for non kickstarters
+		177: "Base Foundation - Kickstarter",          # Kickstarter part. Not available for non kickstarters
 		178: "Half Stairs",
 		179: "Stairs Joint",
 		180: "One step stairs",
