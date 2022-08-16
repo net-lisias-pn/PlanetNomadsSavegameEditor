@@ -134,7 +134,7 @@ class Savegame:
 			myzip.write(os.path.join("PNSE_extract", "_working.db"), "_working.db")
 
 	def unlock_recipes(self):
-		unlock_string = "PL1\n" + "_".join([str(i) for i in range(1, 100)])
+		unlock_string = "PL1\n" + "_".join([str(i) for i in range(1, 237)])
 		self.db.execute("update simple_storage set value = ? where key = 'playerTechnology'", (unlock_string,))
 		affected = self.db.rowcount
 		self.on_save()
