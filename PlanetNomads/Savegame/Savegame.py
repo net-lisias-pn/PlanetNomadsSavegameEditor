@@ -31,7 +31,10 @@ class Savegame:
 		if self.db:
 			self.db.close()
 			self.db = None
-		os.remove(self.temp_extracted_file)
+		try:
+			os.remove(self.temp_extracted_file)
+		except:
+			pass
 
 	def load(self, filename):
 		self.filename = filename
