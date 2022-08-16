@@ -27,7 +27,7 @@ class GUI(Frame):
 
 		# Toolbar
 		gui_toolbar_frame = ttk.Frame(parent, padding="5 5 5 5")
-		gui_toolbar_frame.pack(fill="both", expand=True)
+		gui_toolbar_frame.pack(fill="both", expand=False)
 
 		gui_load_file_button = ttk.Button(gui_toolbar_frame, text="Select file", command=self.select_file)
 		gui_load_file_button.grid(row=0, column=0, sticky=(E, W))
@@ -50,7 +50,7 @@ class GUI(Frame):
 		gui_main_frame = ttk.Frame(parent, padding="5 5 5 5")
 		gui_main_frame.grid_rowconfigure(0, weight=1)
 		gui_main_frame.grid_columnconfigure(0, weight=1)
-		gui_main_frame.pack(fill="both", expand=True)
+		gui_main_frame.pack(fill="both", expand=False)
 
 		gui_tabs = ttk.Notebook(gui_main_frame)
 		gui_tabs.grid(sticky=(N, E, S, W))
