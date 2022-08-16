@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import os, re
+import os, traceback, re
 from math import sqrt
 
 from tkinter import *
@@ -9,7 +9,7 @@ from tkinter.scrolledtext import ScrolledText
 import _tkinter
 
 from Feature import util
-from Feature import Backup, Map3D, Migration
+from Feature import Backup, Kickstarter, Map3D, Migration
 
 import PlanetNomads
 
@@ -19,6 +19,18 @@ class GUI(Frame):
 	current_file = None
 	savegame = None
 	locked_buttons = []
+	__HOTBARS = {
+			"HotBar 1" : "hotBar_building",
+			"HotBar 2" : "hotBar_building1",
+			"HotBar 3" : "hotBar_building2",
+			"HotBar 4" : "hotBar_building3",
+			"HotBar 5" : "hotBar_building4",
+			"HotBar 6" : "hotBar_building5",
+			"HotBar 7" : "hotBar_building6",
+			"HotBar 8" : "hotBar_building7",
+			"HotBar 9" : "hotBar_building8",
+			"HotBar 0" : "hotBar_building9",
+		}
 
 	def __init__(self, parent):
 		Frame.__init__(self, parent)
@@ -79,7 +91,7 @@ class GUI(Frame):
 		self.gui_selected_machine_identifier.trace('w', self.on_machine_selected)
 
 		self.gui_machine_select = ttk.Combobox(frame, textvariable=self.gui_selected_machine_identifier,
-											   values=self.machine_select_options, state='readonly')
+											values=self.machine_select_options, state='readonly')
 		self.gui_machine_select.grid(sticky=(E, W))
 		self.locked_buttons.append(self.gui_machine_select)
 
@@ -88,7 +100,7 @@ class GUI(Frame):
 		teleport_tools.grid(sticky=(N, E, S, W))
 
 		gui_push_machine_button = ttk.Button(teleport_tools, text="Teleport selected machine",
-											 command=self.teleport_machine)
+											command=self.teleport_machine)
 		gui_push_machine_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_push_machine_button)
 
@@ -98,7 +110,7 @@ class GUI(Frame):
 		self.gui_teleport_distance = IntVar(self.parent)
 		self.gui_teleport_distance.set(20)
 		self.gui_teleport_distance_button = ttk.Entry(teleport_tools, textvariable=self.gui_teleport_distance,
-													  justify="center", width=5)
+													justify="center", width=5)
 		self.gui_teleport_distance_button.grid(row=0, column=2)
 
 		label = ttk.Label(teleport_tools, text=" meters over ")
@@ -140,7 +152,7 @@ class GUI(Frame):
 				continue  # 300+ wrecks are just too much
 			machine_list.append("{} {} [{}]".format(_type, name_id, m.identifier))
 			target.add_command(label="{} {}".format(_type, name_id),
-							   command=lambda value=m.identifier: self.gui_teleport_machine_target.set(value))
+							command=lambda value=m.identifier: self.gui_teleport_machine_target.set(value))
 		machine_list.sort()
 		self.machine_select_options.extend(machine_list)
 		self.gui_machine_select["values"] = self.machine_select_options
@@ -151,7 +163,7 @@ class GUI(Frame):
 		gui_dev_tools_frame = ttk.Frame(gui_main_frame)
 
 		gui_inventory_button = ttk.Button(gui_dev_tools_frame, text="List player inventory",
-										  command=self.list_inventory)
+										command=self.list_inventory)
 		gui_inventory_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_inventory_button)
 
@@ -160,8 +172,8 @@ class GUI(Frame):
 		self.locked_buttons.append(gui_machines_button)
 
 		gui_teleport_northpole_button = ttk.Button(gui_dev_tools_frame,
-												   text="Teleport player to north pole (death possible)",
-												   command=self.teleport_northpole)
+												text="Teleport player to north pole (death possible)",
+												command=self.teleport_northpole)
 		gui_teleport_northpole_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_teleport_northpole_button)
 		return gui_dev_tools_frame
@@ -189,6 +201,27 @@ class GUI(Frame):
 											command=self.create_gps_beacons)
 		gui_southbeacon_button.grid(row=1, column=1, sticky=(E, W))
 		self.locked_buttons.append(gui_southbeacon_button)
+
+		self.gui_kickstarters_A_button = ttk.Button(gui_basic_tools_frame, text="Kickstarters parts A on HotBar", command=self.hotbar_kickstarters_A)
+		self.gui_kickstarters_A_button.grid(row=2, column=0, sticky=(E, W))
+
+		self.gui_kickstarters_B_button = ttk.Button(gui_basic_tools_frame, text="Kickstarters parts B on HotBar", command=self.hotbar_kickstarters_B)
+		self.gui_kickstarters_B_button.grid(row=2, column=1, sticky=(E, W))
+
+		self.gui_kickstarters_C_button = ttk.Button(gui_basic_tools_frame, text="Kickstarters parts C on HotBar", command=self.hotbar_kickstarters_C)
+		self.gui_kickstarters_C_button.grid(row=3, column=1, sticky=(E, W))
+
+		self.hotbar_select_options = ["Select HotBar"]
+		self.gui_selected_hotbar_identifier = StringVar(self.parent)
+		self.gui_selected_hotbar_identifier.set(self.hotbar_select_options[0])
+		self.gui_selected_hotbar_identifier.trace('w', self.on_hotbar_selected)
+
+		self.gui_hotbar_select = ttk.Combobox(gui_basic_tools_frame, textvariable=self.gui_selected_hotbar_identifier,
+											values=self.hotbar_select_options, state='readonly')
+		self.gui_hotbar_select.grid(row=2, column=2, sticky=(E, W))
+		self.locked_buttons.append(self.gui_hotbar_select)
+		self.hotbar_select_update();
+
 		return gui_basic_tools_frame
 
 	def get_selected_machine_id(self, warn=True):
@@ -271,7 +304,7 @@ class GUI(Frame):
 		gui_resource_menu.add_command(label="Uranium", command=lambda: self.create_item(61))
 		gui_resource_menu.add_command(label="Enriched Uranium", command=lambda: self.create_item(63))
 		gui_resource_menubutton = ttk.Menubutton(gui_cheats_frame, text="Cheat: add stack of resource",
-												 menu=gui_resource_menu)
+												menu=gui_resource_menu)
 		gui_resource_menubutton.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_resource_menubutton)
 
@@ -286,7 +319,7 @@ class GUI(Frame):
 		self.locked_buttons.append(gui_item_menubutton)
 
 		gui_unlock_button = ttk.Button(gui_cheats_frame, text="Cheat: give Mk4 equipment",
-									   command=self.create_mk4_equipment)
+									command=self.create_mk4_equipment)
 		gui_unlock_button.grid(sticky=(E, W))
 		self.locked_buttons.append(gui_unlock_button)
 		return gui_cheats_frame
@@ -471,6 +504,51 @@ class GUI(Frame):
 		except OSError:
 			self.update_statustext("Could not create the file")
 
+	def on_hotbar_selected(self, *args):
+		selected = self.gui_selected_hotbar_identifier.get()
+		state = "{}disabled".format("!" if "Select HotBar" != selected else "")
+		self.gui_kickstarters_A_button.state([state])
+		self.gui_kickstarters_B_button.state([state])
+		self.gui_kickstarters_C_button.state([state])
+		self.update_statustext("Selected {}.".format(selected))
+
+	def hotbar_select_update(self):
+		self.hotbar_select_options = ["Select HotBar"]
+		_list = []
+
+		for i in range(1, 10):
+			_list.append("HotBar {}".format(i))
+		_list.append("HotBar {}".format(0))
+		self.hotbar_select_options.extend(_list)
+		self.gui_hotbar_select["values"] = self.hotbar_select_options
+		self.gui_selected_hotbar_identifier.set("Select HotBar")
+
+	def hotbar_kickstarters_A(self):
+		selected = self.gui_selected_hotbar_identifier.get()
+		try:
+			Kickstarter.set_kickstarters_1(self.savegame, GUI.__HOTBARS[selected])
+			self.update_statustext("Kickstarters partset A applied to {}.".format(selected))
+		except Exception:
+			self.update_statustext("Could not apply the patch!")
+			traceback.print_exc()
+
+	def hotbar_kickstarters_B(self):
+		selected = self.gui_selected_hotbar_identifier.get()
+		try:
+			Kickstarter.set_kickstarters_2(self.savegame, GUI.__HOTBARS[selected])
+			self.update_statustext("Kickstarters partset B applied to {}.".format(selected))
+		except Exception:
+			self.update_statustext("Could not apply the patch!")
+			traceback.print_exc()
+
+	def hotbar_kickstarters_C(self):
+		selected = self.gui_selected_hotbar_identifier.get()
+		try:
+			Kickstarter.set_kickstarters_3(self.savegame, GUI.__HOTBARS[selected])
+			self.update_statustext("Kickstarters partset C applied to {}.".format(selected))
+		except Exception:
+			self.update_statustext("Could not apply the patch!")
+			traceback.print_exc()
 
 if __name__ == "__main__":
 	window = Tk()
