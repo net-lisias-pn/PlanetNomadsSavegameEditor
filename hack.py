@@ -87,17 +87,67 @@ def update_hotbar9(savegame, prefix):
 def update_hotbar0(savegame, prefix):
 	update_hotbar(savegame, prefix, "hotBar_building9")
 
+def add_oxygen(savegame):
+	inventory = savegame.get_player_inventory()
+	stacks = inventory.get_stacks()
+	for slot in stacks:
+		if "Oxygen Tank" == stacks[slot].get_item_name():
+			stacks[slot].count = 100
+	inventory.save()
+
+def list_commands(savegame):
+	print("Commands found:")
+	for m in savegame.machines:
+		blocks = m.active_block_data
+		for b in blocks.keys():
+			block = blocks[b]
+			if '56' != block.root.attrib['Type_ID'] : continue
+			if block.name.startswith("COMMAND:"):
+				tag, cmd, parm = block.name.split(" ")
+				print("\tMachine {}, Block {}, {} {} @ {}".format(m.identifier, b, cmd, parm, m.get_coordinates()))
+
+def list_modifications(savegame, table, coord, radius):
+	print("{}:".format(table))
+	x_min = coord[0] - radius
+	x_max = coord[0] + radius
+	y_min = coord[1] - radius
+	y_max = coord[1] + radius
+	z_min = coord[2] - radius
+	z_max = coord[2] + radius
+
+	savegame.db.execute("select idChunk, p_x, p_y, p_z, radius from {}_modifications".format(table))
+	rows = savegame.db.fetchall()
+
+	for row in rows:
+		idChunk = row['idChunk']
+		p_x = row['p_x']
+		p_y = row['p_y']
+		p_z = row['p_z']
+		r = row['radius']
+
+		if (x_min <= p_x <= x_max) and \
+			(y_min <= p_y <= y_max) and \
+			(z_min <= p_z <= z_max) :
+			print("\t{}".format(idChunk))
+
 def main():
 	savegame = PlanetNomads.Savegame()
 	savegame.load(os.path.expanduser(FILENAME))
 	print (savegame.get_name())
 	list_inventory(savegame)
 
-	trick_hotbar(savegame)
-	list_hotbar(savegame);
+	#trick_hotbar(savegame)
+	#list_hotbar(savegame)
 
 #     for i in range(120, 150):
 #         create_item(savegame, i)
+
+	#add_oxygen(savegame)
+	#list_inventory(savegame)
+
+	list_commands(savegame)
+	#list_modifications(savegame, "grass", [-8354.019, 1428.132, -5314.299], 5)
+	list_modifications(savegame, "terrain", [-8354.019, 1428.132, -5314.299], 5)
 
 	savegame.cleanup()
 	return 0
