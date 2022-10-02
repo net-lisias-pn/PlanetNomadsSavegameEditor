@@ -9,7 +9,7 @@ from tkinter.scrolledtext import ScrolledText
 import _tkinter
 
 from Feature import util
-from Feature import Backup, Kickstarter, Map3D, Migration
+from Feature import Backup, Kickstarter, Map3D, Migration, Commands
 
 import PlanetNomads
 
@@ -77,7 +77,8 @@ class GUI(Frame):
 		gui_tabs.add(self.init_basic_buttons(gui_main_frame), text="Basic tools")
 		gui_tabs.add(self.init_machine_buttons(gui_main_frame), text="Machine tools")
 		gui_tabs.add(self.init_cheat_buttons(gui_main_frame), text="Cheats")
-		gui_tabs.add(self.init_dev_buttons(gui_main_frame), text="Dev tools")
+		gui_tabs.add(self.init_adv_buttons(gui_main_frame), text="Advanced tools")
+		gui_tabs.add(self.init_dev_buttons(gui_main_frame), text="Development tools")
 
 		for button in self.locked_buttons:
 			button.state(["disabled"])
@@ -158,6 +159,16 @@ class GUI(Frame):
 		self.gui_machine_select["values"] = self.machine_select_options
 		self.gui_selected_machine_identifier.set("Select machine")
 		self.gui_teleport_machine_target.set("current position")
+
+	def init_adv_buttons(self, gui_main_frame):
+		gui_frame = ttk.Frame(gui_main_frame)
+
+		gui_command_button = ttk.Button(gui_frame, text="Execute Commands on Beacons",
+										command=self.execute_commands)
+		gui_command_button.grid(sticky=(E, W))
+		self.locked_buttons.append(gui_command_button)
+
+		return gui_frame
 
 	def init_dev_buttons(self, gui_main_frame):
 		gui_dev_tools_frame = ttk.Frame(gui_main_frame)
@@ -549,6 +560,12 @@ class GUI(Frame):
 		except Exception:
 			self.update_statustext("Could not apply the patch!")
 			traceback.print_exc()
+
+	def execute_commands(self):
+		commands = Commands.get_commands(self.savegame)
+		executed = Commands.execute_commands(self.savegame, commands)
+		Commands.cleanup_commands(self.savegame, executed)
+		self.savegame.save()
 
 if __name__ == "__main__":
 	window = Tk()
