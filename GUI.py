@@ -28,7 +28,7 @@ from Feature import Backup, Kickstarter, Map3D, Migration, Commands
 
 import PlanetNomads
 
-version = '1.4.0'
+version = '1.5.0'
 
 class GUI(Frame):
 	current_file = None

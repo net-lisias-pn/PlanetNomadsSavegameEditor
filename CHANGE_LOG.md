@@ -1,5 +1,17 @@
 # PlanetNomadsSavegameEditor :: Change Log
 
+* 2022-1002: 1.5.0 (Lisias) for PN >= 1.0.7.2
+	+ Refactoring
+		- Each feature is now on its own Module.
+	+ Workaround for an Axes3d idiosyncrasy on modern Python.
+	+ Restoring MacOS support on dialogs.
+	+ Updated Blocks and Expendables definitions
+	+ Unlocking the new Recipes from recent PN versions
+	+ Allowing access to the Kickstarts parts by hacking them into the Hotbars.
+	+ Adding "Commands" to be executed by the tool:
+		- `restore_grass`
+		- `resgore_terrain`
+		- `restore_all`
 * 2019-0510: 1.4.0 (black silence) for PN >= 1.0.0
 	+ Updated load/save to work with zipfiles created by PN 1.0.0
 * 2018-0429: 1.3.1 (black silence)
