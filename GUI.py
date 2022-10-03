@@ -577,10 +577,17 @@ class GUI(Frame):
 			traceback.print_exc()
 
 	def execute_commands(self):
+		self.update_statustext("Searching for Commands.")
 		commands = Commands.get_commands(self.savegame)
+
+		self.update_statustext("Found {:d}. Executing.".format(len(commands)))
 		executed = Commands.execute_commands(self.savegame, commands)
+
+		self.update_statustext("{:d} Commands were executed with success. Cleaning up.".format(len(executed)))
 		Commands.cleanup_commands(self.savegame, executed)
+
 		self.savegame.save()
+		self.update_statustext("Done.")
 
 if __name__ == "__main__":
 	window = Tk()
