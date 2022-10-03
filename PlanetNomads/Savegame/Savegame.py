@@ -1,5 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+'''
+		This file is part of PlanetNomadsSavegameEditor /L
+			© 2022 LisiasT
+			© 2017-2018 black silence
+
+		PlanetNomadsSavegameEditor /L is licensed as follows:
+				* GPL 2.0 : https://www.gnu.org/licenses/gpl-2.0.txt
+
+		PlanetNomadsSavegameEditor /L is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+		You should have received a copy of the GNU General Public License 2.0
+		along with PlanetNomadsSavegameEditor /L. If not, see <https://www.gnu.org/licenses/>.
+'''
 import os, random, re
 import atexit
 import zipfile
@@ -176,39 +191,39 @@ class Savegame:
 		next_active_id = int(self.db.fetchone()["mx"]) + 1
 
 		xml = '<ActiveBlock xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' \
-			  'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="{}" Type_ID="56" Container_ID="-1" Name="">' \
-			  '<Module ID="0" Type="SwitchModule"><Prop key="TurnState"><value xsi:type="xsd:int">1</value></Prop></Module>' \
-			  '<Module ID="1" Type="PowerIn" />' \
-			  '<Module ID="2" Type="PositionModule"><Prop key="BasePosition"><value xsi:type="xsd:string">{:0.0f};{:0.0f};{:0.0f}</value></Prop></Module>' \
-			  '<Module ID="3" Type="PowerOut"><Prop key="PowerState"><value xsi:type="xsd:int">0</value></Prop></Module>' \
-			  '<Module ID="4" Type="SwitchModule"><Prop key="TurnState"><value xsi:type="xsd:int">0</value></Prop></Module>' \
-			  '<Module ID="5" Type="SensorModule" />' \
-			  '<Module ID="6" Type="RenameModule" />' \
-			  '<Module ID="7" Type="ConnectPowerInOutModule" />' \
-			  '<Module ID="8" Type="NavigationModule"><Prop key="Icon"><value xsi:type="xsd:int">2</value></Prop><Prop key="TurnState"><value xsi:type="xsd:int">1</value></Prop></Module>' \
-			  '</ActiveBlock>'.format(next_active_id, x, y, z)
+			'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="{}" Type_ID="56" Container_ID="-1" Name="">' \
+			'<Module ID="0" Type="SwitchModule"><Prop key="TurnState"><value xsi:type="xsd:int">1</value></Prop></Module>' \
+			'<Module ID="1" Type="PowerIn" />' \
+			'<Module ID="2" Type="PositionModule"><Prop key="BasePosition"><value xsi:type="xsd:string">{:0.0f};{:0.0f};{:0.0f}</value></Prop></Module>' \
+			'<Module ID="3" Type="PowerOut"><Prop key="PowerState"><value xsi:type="xsd:int">0</value></Prop></Module>' \
+			'<Module ID="4" Type="SwitchModule"><Prop key="TurnState"><value xsi:type="xsd:int">0</value></Prop></Module>' \
+			'<Module ID="5" Type="SensorModule" />' \
+			'<Module ID="6" Type="RenameModule" />' \
+			'<Module ID="7" Type="ConnectPowerInOutModule" />' \
+			'<Module ID="8" Type="NavigationModule"><Prop key="Icon"><value xsi:type="xsd:int">2</value></Prop><Prop key="TurnState"><value xsi:type="xsd:int">1</value></Prop></Module>' \
+			'</ActiveBlock>'.format(next_active_id, x, y, z)
 
 		sql = "INSERT INTO active_blocks (id, type_id, data, container_id) VALUES (?, 56, ?, -1)"
 		self.db.execute(sql, (next_active_id, xml))
 
 		sql = 'INSERT INTO machine (id, data, transform) VALUES (?, ?, ' \
-			  '"{:0.0f} {:0.0f} {:0.0f} {:0.0f} {:0.0f} {:0.0f}")'.format(x, y, z, rot_x, rot_y, rot_z)
+			'"{:0.0f} {:0.0f} {:0.0f} {:0.0f} {:0.0f} {:0.0f}")'.format(x, y, z, rot_x, rot_y, rot_z)
 		machine_id = random.Random().randint(1000000, 10000000)  # Is there a system behind the ID?
 		xml = '<?xml version="1.0" encoding="utf-8"?>\n' \
-			  '<MachineSaveData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n' \
-			  '<Grid ID="{}">\n' \
-			  '<BasePosition X="{:0.0f}" Y="{:0.0f}" Z="{:0.0f}" />' \
-			  '<BaseRotation X="{:0.0f}" Y="{:0.0f}" Z="{:0.0f}" />' \
-			  '<Blocks>\n' \
-			  '<Block ID="56" Health="80" Weld="80" Ground="true" ActiveID="{}">' \
-			  '<Pos x="0" y="0" z="0" /><Rot v="0" /><Col r="0" g="0" b="0" />' \
-			  '</Block>\n' \
-			  '</Blocks>\n</Grid>\n</MachineSaveData>\n'.format(machine_id, x, y, z, rot_x, rot_y, rot_z, next_active_id)
+			'<MachineSaveData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n' \
+			'<Grid ID="{}">\n' \
+			'<BasePosition X="{:0.0f}" Y="{:0.0f}" Z="{:0.0f}" />' \
+			'<BaseRotation X="{:0.0f}" Y="{:0.0f}" Z="{:0.0f}" />' \
+			'<Blocks>\n' \
+			'<Block ID="56" Health="80" Weld="80" Ground="true" ActiveID="{}">' \
+			'<Pos x="0" y="0" z="0" /><Rot v="0" /><Col r="0" g="0" b="0" />' \
+			'</Block>\n' \
+			'</Blocks>\n</Grid>\n</MachineSaveData>\n'.format(machine_id, x, y, z, rot_x, rot_y, rot_z, next_active_id)
 		self.db.execute(sql, (machine_id, xml))
 
 		# Solar beacon is self powered
 		sql = 'INSERT INTO activeblocks_connector_power (block_id_1, module_id_1, block_id_2, module_id_2, power) ' \
-			  'VALUES (?, 3, ?, 1, 20)'
+			'VALUES (?, 3, ?, 1, 20)'
 		self.db.execute(sql, (next_active_id, next_active_id))
 
 		# No idea what this does
