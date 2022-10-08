@@ -19,6 +19,8 @@ import os, traceback, re
 from math import sqrt
 
 import tkinter as tk
+from tkinter import filedialog
+from tkinter.simpledialog import Dialog
 from tkinter.scrolledtext import ScrolledText
 from tkinter import ttk
 import _tkinter
@@ -30,7 +32,64 @@ import PlanetNomads
 
 version = '1.5.0'
 
-class GUI(Frame):
+class OpenGameDialog(Dialog):
+	def __init__(self, parent):
+		directory = PNSD.Directory()
+		self.__current_games = sorted(directory, key=lambda k:k.modified_at, reverse=True)
+		self.selected_game = None
+		self.selected_game_file = None
+		self.__listbox = None
+
+		super().__init__(parent, "Select a savegame")
+
+	def body(self, frame):
+		self.geometry("640x300")
+		list_items = tk.Variable(value=self.__current_games)
+		self.__listbox = tk.Listbox(
+			self,
+			listvariable=list_items,
+			selectmode=tk.SINGLE
+		)
+		self.__listbox.pack(expand=True, fill=tk.BOTH)
+		self.__listbox.bind('<<ListboxSelect>>', self.items_selected)
+		return frame
+
+	def items_selected(self, event):
+		selected_indices = self.__listbox.curselection()
+		self.selected_game = self.__current_games[selected_indices[0]]
+		self.selected_game_file = os.path.join(PNSD.util.solve_savedir(), "save_{}.db".format(self.selected_game.id))
+
+	def ok_pressed(self):
+		self.destroy()
+
+	def cancel_pressed(self):
+		self.selected_game = None
+		self.selected_game_file = None
+		self.destroy()
+
+	def select_file(self):
+		"""
+		Show file select dialog
+		:return: None
+		"""
+		opts = {"filetypes": [("PN save files", "*.db"), ("All files", "*.*")]}
+		opts["initialdir"] = PNSD.util.solve_savedir()
+		self.selected_game = None
+		self.selected_game_file = filedialog.askopenfilename(**opts)
+		if self.selected_game_file:
+			self.destroy()
+
+	def buttonbox(self):
+		self.file_button = ttk.Button(self, text="Select by file…", command=self.select_file)
+		self.file_button.pack(side="left")
+		cancel_button = tk.Button(self, text='Cancel', width=5, command=self.cancel_pressed)
+		cancel_button.pack(side="right")
+		self.ok_button = tk.Button(self, text='OK', width=5, command=self.ok_pressed)
+		self.ok_button.pack(side="right")
+		self.bind("<Return>", lambda event: self.ok_pressed())
+		self.bind("<Escape>", lambda event: self.cancel_pressed())
+
+class GUI(tk.Frame):
 	current_file = None
 	savegame = None
 	locked_buttons = []
@@ -56,8 +115,8 @@ class GUI(Frame):
 		gui_toolbar_frame = ttk.Frame(parent, padding="5 5 5 5")
 		gui_toolbar_frame.pack(fill="both", expand=False)
 
-		gui_load_file_button = ttk.Button(gui_toolbar_frame, text="Select file", command=self.select_file)
-		gui_load_file_button.grid(row=0, column=0, sticky=(tk.E, tk.W))
+		gui_load_game_button = ttk.Button(gui_toolbar_frame, text="Select Game…", command=self.select_game)
+		gui_load_game_button.grid(row=0, column=0, sticky=(tk.E, tk.W))
 
 		gui_backup_button = ttk.Button(gui_toolbar_frame, text="Create backup", command=self.create_backup)
 		gui_backup_button.grid(row=0, column=1, sticky=(tk.E, tk.W))
@@ -66,11 +125,11 @@ class GUI(Frame):
 		self.gui_restore_button.grid(row=0, column=2, sticky=(tk.E, tk.W))
 		self.gui_restore_button.state(["disabled"])  # Restore button is unlocked separately
 
-		gui_export_save_button = ttk.Button(gui_toolbar_frame, text="Export file", command=self.export_save)
+		gui_export_save_button = ttk.Button(gui_toolbar_frame, text="Export file…", command=self.export_save)
 		gui_export_save_button.grid(row=1, column=1, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_export_save_button)
 
-		gui_import_save_button = ttk.Button(gui_toolbar_frame, text="Import file", command=self.import_save)
+		gui_import_save_button = ttk.Button(gui_toolbar_frame, text="Import file…", command=self.import_save)
 		gui_import_save_button.grid(row=1, column=2, sticky=(tk.E, tk.W))
 
 		# content
@@ -360,28 +419,25 @@ class GUI(Frame):
 		self.gui_status.see(tk.END)
 		self.gui_status.config(state=tk.DISABLED)
 
-	def select_file(self):
-		"""
-		Show file select dialog
-		:return: None
-		"""
-		opts = {"filetypes": [("PN save files", "*.db"), ("All files", "*.*")]}
-		opts["initialdir"] = util.solve_savedir()
-		filename = tk.filedialog.askopenfilename(**opts)
-		if not filename:
+	def select_game(self):
+		d = OpenGameDialog(self.parent)
+		if not d.selected_game_file:
 			return
-		self.load_file(filename)
+		self.current_game = d.selected_game
+		self.current_file = d.selected_game_file
+		self.load_file(self.current_file)
+		if self.current_game:
+			self.update_statustext("Loaded game '{}'".format(self.current_game.name))
+		else:
+			self.update_statustext("Loaded game '{}' from file '{}'".format(self.savegame.get_name(), os.path.basename(self.current_file)))
 
 	def load_file(self, filename: tk.Text):
 		"""
 		Load file
 		:type filename: Filename with absolute path
 		"""
-		self.current_file = filename
-
 		self.savegame = PlanetNomads.Savegame()
 		self.savegame.load(self.current_file)
-		self.update_statustext("Loaded game '{}'".format(self.savegame.get_name()))
 
 		# Enable some buttons once a file is loaded
 		for button in self.locked_buttons:
