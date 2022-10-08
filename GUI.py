@@ -18,12 +18,12 @@
 import os, traceback, re
 from math import sqrt
 
-from tkinter import *
-from tkinter import ttk, filedialog, messagebox, colorchooser
+import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
+from tkinter import ttk
 import _tkinter
 
-from Feature import util
+from PlanetNomads.SaveDirectory import util
 from Feature import Backup, Kickstarter, Map3D, Migration, Commands
 
 import PlanetNomads
@@ -48,7 +48,7 @@ class GUI(Frame):
 		}
 
 	def __init__(self, parent):
-		Frame.__init__(self, parent)
+		tk.Frame.__init__(self, parent)
 		self.parent = parent
 		parent.title("Planet Nomads Savegame Editor %s" % version)
 
@@ -57,21 +57,21 @@ class GUI(Frame):
 		gui_toolbar_frame.pack(fill="both", expand=False)
 
 		gui_load_file_button = ttk.Button(gui_toolbar_frame, text="Select file", command=self.select_file)
-		gui_load_file_button.grid(row=0, column=0, sticky=(E, W))
+		gui_load_file_button.grid(row=0, column=0, sticky=(tk.E, tk.W))
 
 		gui_backup_button = ttk.Button(gui_toolbar_frame, text="Create backup", command=self.create_backup)
-		gui_backup_button.grid(row=0, column=1, sticky=(E, W))
+		gui_backup_button.grid(row=0, column=1, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_backup_button)
 		self.gui_restore_button = ttk.Button(gui_toolbar_frame, text="Restore backup", command=self.restore_backup)
-		self.gui_restore_button.grid(row=0, column=2, sticky=(E, W))
+		self.gui_restore_button.grid(row=0, column=2, sticky=(tk.E, tk.W))
 		self.gui_restore_button.state(["disabled"])  # Restore button is unlocked separately
 
 		gui_export_save_button = ttk.Button(gui_toolbar_frame, text="Export file", command=self.export_save)
-		gui_export_save_button.grid(row=1, column=1, sticky=(E, W))
+		gui_export_save_button.grid(row=1, column=1, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_export_save_button)
 
 		gui_import_save_button = ttk.Button(gui_toolbar_frame, text="Import file", command=self.import_save)
-		gui_import_save_button.grid(row=1, column=2, sticky=(E, W))
+		gui_import_save_button.grid(row=1, column=2, sticky=(tk.E, tk.W))
 
 		# content
 		gui_main_frame = ttk.Frame(parent, padding="5 5 5 5")
@@ -80,7 +80,7 @@ class GUI(Frame):
 		gui_main_frame.pack(fill="both", expand=False)
 
 		gui_tabs = ttk.Notebook(gui_main_frame)
-		gui_tabs.grid(sticky=(N, E, S, W))
+		gui_tabs.grid(sticky=(tk.N, tk.E, tk.S, tk.W))
 
 		# status
 		gui_status_frame = ttk.Frame(parent, relief="sunken", padding="2 2 2 2")
@@ -102,28 +102,28 @@ class GUI(Frame):
 		frame = ttk.Frame(gui_main_frame)
 
 		self.machine_select_options = ["Select machine"]
-		self.gui_selected_machine_identifier = StringVar(self.parent)
+		self.gui_selected_machine_identifier = tk.StringVar(self.parent)
 		self.gui_selected_machine_identifier.set(self.machine_select_options[0])
 		self.gui_selected_machine_identifier.trace('w', self.on_machine_selected)
 
 		self.gui_machine_select = ttk.Combobox(frame, textvariable=self.gui_selected_machine_identifier,
 											values=self.machine_select_options, state='readonly')
-		self.gui_machine_select.grid(sticky=(E, W))
+		self.gui_machine_select.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(self.gui_machine_select)
 
 		# Teleport area
 		teleport_tools = ttk.Frame(frame)
-		teleport_tools.grid(sticky=(N, E, S, W))
+		teleport_tools.grid(sticky=(tk.N, tk.E, tk.S, tk.W))
 
 		gui_push_machine_button = ttk.Button(teleport_tools, text="Teleport selected machine",
 											command=self.teleport_machine)
-		gui_push_machine_button.grid(sticky=(E, W))
+		gui_push_machine_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_push_machine_button)
 
 		label = ttk.Label(teleport_tools, text=" to ")
 		label.grid(row=0, column=1)
 
-		self.gui_teleport_distance = IntVar(self.parent)
+		self.gui_teleport_distance = tk.IntVar(self.parent)
 		self.gui_teleport_distance.set(20)
 		self.gui_teleport_distance_button = ttk.Entry(teleport_tools, textvariable=self.gui_teleport_distance,
 													justify="center", width=5)
@@ -133,23 +133,23 @@ class GUI(Frame):
 		label.grid(row=0, column=3)
 
 		options = ["current position"]
-		self.gui_teleport_machine_target = StringVar(self.parent)
+		self.gui_teleport_machine_target = tk.StringVar(self.parent)
 		self.gui_teleport_machine_target.set(options[0])
 		self.gui_teleport_target_button = ttk.OptionMenu(teleport_tools, self.gui_teleport_machine_target, *options)
-		self.gui_teleport_target_button.grid(row=0, column=4, sticky=(E, W))
+		self.gui_teleport_target_button.grid(row=0, column=4, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(self.gui_teleport_target_button)
 
 		# Recolor area
 		color_grid = ttk.Frame(frame)
-		color_grid.grid(sticky=(N, E, S, W))
+		color_grid.grid(sticky=(tk.N, tk.E, tk.S, tk.W))
 		gui_randomize_color = ttk.Button(color_grid, text="Randomize colors", command=self.randomize_machine_color)
-		gui_randomize_color.grid(row=0, column=2, sticky=(E, W))
+		gui_randomize_color.grid(row=0, column=2, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_randomize_color)
 		gui_change_color = ttk.Button(color_grid, text="Paint all blocks", command=self.change_machine_color)
-		gui_change_color.grid(row=0, sticky=(E, W))
+		gui_change_color.grid(row=0, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_change_color)
 		gui_change_color = ttk.Button(color_grid, text="Paint grey blocks", command=self.replace_machine_color)
-		gui_change_color.grid(row=0, column=1, sticky=(E, W))
+		gui_change_color.grid(row=0, column=1, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_change_color)
 
 		return frame
@@ -180,7 +180,7 @@ class GUI(Frame):
 
 		gui_command_button = ttk.Button(gui_frame, text="Execute Commands on Beacons",
 										command=self.execute_commands)
-		gui_command_button.grid(sticky=(E, W))
+		gui_command_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_command_button)
 
 		return gui_frame
@@ -190,17 +190,17 @@ class GUI(Frame):
 
 		gui_inventory_button = ttk.Button(gui_dev_tools_frame, text="List player inventory",
 										command=self.list_inventory)
-		gui_inventory_button.grid(sticky=(E, W))
+		gui_inventory_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_inventory_button)
 
 		gui_machines_button = ttk.Button(gui_dev_tools_frame, text="List machines", command=self.list_machines)
-		gui_machines_button.grid(sticky=(E, W))
+		gui_machines_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_machines_button)
 
 		gui_teleport_northpole_button = ttk.Button(gui_dev_tools_frame,
 												text="Teleport player to north pole (death possible)",
 												command=self.teleport_northpole)
-		gui_teleport_northpole_button.grid(sticky=(E, W))
+		gui_teleport_northpole_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_teleport_northpole_button)
 		return gui_dev_tools_frame
 
@@ -209,42 +209,42 @@ class GUI(Frame):
 
 		if Map3D.enable_map:
 			gui_draw_map_button = ttk.Button(gui_basic_tools_frame, text="Draw map", command=self.draw_map)
-			gui_draw_map_button.grid(sticky=(E, W))
+			gui_draw_map_button.grid(sticky=(tk.E, tk.W))
 			self.locked_buttons.append(gui_draw_map_button)
 		else:
 			self.update_statustext("Install numpy + matplotlib to enable the map!")
 
 		gui_unlock_button = ttk.Button(gui_basic_tools_frame, text="Unlock all recipes", command=self.unlock_recipes)
-		gui_unlock_button.grid(sticky=(E, W))
+		gui_unlock_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_unlock_button)
 
 		gui_northbeacon_button = ttk.Button(gui_basic_tools_frame, text="Create north pole beacon",
 											command=self.create_north_beacon)
-		gui_northbeacon_button.grid(row=0, column=1, sticky=(E, W))
+		gui_northbeacon_button.grid(row=0, column=1, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_northbeacon_button)
 
 		gui_southbeacon_button = ttk.Button(gui_basic_tools_frame, text="Create GPS beacons",
 											command=self.create_gps_beacons)
-		gui_southbeacon_button.grid(row=1, column=1, sticky=(E, W))
+		gui_southbeacon_button.grid(row=1, column=1, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_southbeacon_button)
 
 		self.gui_kickstarters_A_button = ttk.Button(gui_basic_tools_frame, text="Kickstarters parts A on HotBar", command=self.hotbar_kickstarters_A)
-		self.gui_kickstarters_A_button.grid(row=2, column=0, sticky=(E, W))
+		self.gui_kickstarters_A_button.grid(row=2, column=0, sticky=(tk.E, tk.W))
 
 		self.gui_kickstarters_B_button = ttk.Button(gui_basic_tools_frame, text="Kickstarters parts B on HotBar", command=self.hotbar_kickstarters_B)
-		self.gui_kickstarters_B_button.grid(row=2, column=1, sticky=(E, W))
+		self.gui_kickstarters_B_button.grid(row=2, column=1, sticky=(tk.E, tk.W))
 
 		self.gui_kickstarters_C_button = ttk.Button(gui_basic_tools_frame, text="Kickstarters parts C on HotBar", command=self.hotbar_kickstarters_C)
-		self.gui_kickstarters_C_button.grid(row=3, column=1, sticky=(E, W))
+		self.gui_kickstarters_C_button.grid(row=3, column=1, sticky=(tk.E, tk.W))
 
 		self.hotbar_select_options = ["Select HotBar"]
-		self.gui_selected_hotbar_identifier = StringVar(self.parent)
+		self.gui_selected_hotbar_identifier = tk.StringVar(self.parent)
 		self.gui_selected_hotbar_identifier.set(self.hotbar_select_options[0])
 		self.gui_selected_hotbar_identifier.trace('w', self.on_hotbar_selected)
 
 		self.gui_hotbar_select = ttk.Combobox(gui_basic_tools_frame, textvariable=self.gui_selected_hotbar_identifier,
 											values=self.hotbar_select_options, state='readonly')
-		self.gui_hotbar_select.grid(row=2, column=2, sticky=(E, W))
+		self.gui_hotbar_select.grid(row=2, column=2, sticky=(tk.E, tk.W))
 		self.locked_buttons.append(self.gui_hotbar_select)
 		self.hotbar_select_update();
 
@@ -318,7 +318,7 @@ class GUI(Frame):
 
 	def init_cheat_buttons(self, gui_main_frame):
 		gui_cheats_frame = ttk.Frame(gui_main_frame)
-		gui_resource_menu = Menu(gui_cheats_frame, tearoff=0)
+		gui_resource_menu = tk.Menu(gui_cheats_frame, tearoff=0)
 		gui_resource_menu.add_command(label="Aluminium", command=lambda: self.create_item(51))
 		gui_resource_menu.add_command(label="Biomass Container", command=lambda: self.create_item(392745))
 		gui_resource_menu.add_command(label="Carbon", command=lambda: self.create_item(49))
@@ -331,22 +331,22 @@ class GUI(Frame):
 		gui_resource_menu.add_command(label="Enriched Uranium", command=lambda: self.create_item(63))
 		gui_resource_menubutton = ttk.Menubutton(gui_cheats_frame, text="Cheat: add stack of resource",
 												menu=gui_resource_menu)
-		gui_resource_menubutton.grid(sticky=(E, W))
+		gui_resource_menubutton.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_resource_menubutton)
 
-		gui_item_menu = Menu(gui_cheats_frame, tearoff=0)
+		gui_item_menu = tk.Menu(gui_cheats_frame, tearoff=0)
 		gui_item_menu.add_command(label="Basic Frame", command=lambda: self.create_item(69))
 		gui_item_menu.add_command(label="Composite 1", command=lambda: self.create_item(78))
 		gui_item_menu.add_command(label="Mechanical 1", command=lambda: self.create_item(76))
 		gui_item_menu.add_command(label="Plating", command=lambda: self.create_item(67))
 		gui_item_menu.add_command(label="Standard Electronics", command=lambda: self.create_item(73))
 		gui_item_menubutton = ttk.Menubutton(gui_cheats_frame, text="Cheat: add stack of item", menu=gui_item_menu)
-		gui_item_menubutton.grid(sticky=(E, W))
+		gui_item_menubutton.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_item_menubutton)
 
 		gui_unlock_button = ttk.Button(gui_cheats_frame, text="Cheat: give Mk4 equipment",
 									command=self.create_mk4_equipment)
-		gui_unlock_button.grid(sticky=(E, W))
+		gui_unlock_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_unlock_button)
 		return gui_cheats_frame
 
@@ -355,10 +355,10 @@ class GUI(Frame):
 			self.update_statustext("Player teleported")
 
 	def update_statustext(self, message: str):
-		self.gui_status.config(state=NORMAL)
-		self.gui_status.insert(END, message + "\n")
-		self.gui_status.see(END)
-		self.gui_status.config(state=DISABLED)
+		self.gui_status.config(state=tk.NORMAL)
+		self.gui_status.insert(tk.END, message + "\n")
+		self.gui_status.see(tk.END)
+		self.gui_status.config(state=tk.DISABLED)
 
 	def select_file(self):
 		"""
@@ -367,12 +367,12 @@ class GUI(Frame):
 		"""
 		opts = {"filetypes": [("PN save files", "*.db"), ("All files", "*.*")]}
 		opts["initialdir"] = util.solve_savedir()
-		filename = filedialog.askopenfilename(**opts)
+		filename = tk.filedialog.askopenfilename(**opts)
 		if not filename:
 			return
 		self.load_file(filename)
 
-	def load_file(self, filename: Text):
+	def load_file(self, filename: tk.Text):
 		"""
 		Load file
 		:type filename: Filename with absolute path
@@ -396,26 +396,26 @@ class GUI(Frame):
 
 	def create_backup(self):
 		if Backup.exists(self.current_file):
-			if not messagebox.askokcancel("Overwrite existing backup?", "A backup already exists. Overwrite it?"):
+			if not tk.messagebox.askokcancel("Overwrite existing backup?", "A backup already exists. Overwrite it?"):
 				return
 		try:
 			Backup.create(self.current_file)
 		except IOError:
-			messagebox.showerror(message="Could not create backup file!")
+			tk.messagebox.showerror(message="Could not create backup file!")
 		else:
-			messagebox.showinfo("Backup created", "Backup was created")
+			tk.messagebox.showinfo("Backup created", "Backup was created")
 			self.gui_restore_button.state(["!disabled"])
 
 	def restore_backup(self):
-		res = messagebox.askokcancel("Please confirm", "Are you sure you want to restore the backup?")
+		res = tk.messagebox.askokcancel("Please confirm", "Are you sure you want to restore the backup?")
 		if not res:
 			return
 		try:
 			Backup.restore(self.current_file, self.savegame)
 		except IOError:
-			messagebox.showerror(message="Could not restore backup file!")
+			tk.messagebox.showerror(message="Could not restore backup file!")
 		else:
-			messagebox.showinfo("Backup restore", "Backup was restored")
+			tk.messagebox.showinfo("Backup restore", "Backup was restored")
 
 	def list_machines(self):
 		for m in self.savegame.machines:
@@ -449,7 +449,7 @@ class GUI(Frame):
 		item = PlanetNomads.Item(item_id)
 
 		if not inventory.add_stack(item, amount):
-			messagebox.showerror(message="Could not create resource. All slots full?")
+			tk.messagebox.showerror(message="Could not create resource. All slots full?")
 			return
 		self.update_statustext("Added {} to inventory".format(item.get_name()))
 		inventory.save()
@@ -478,7 +478,7 @@ class GUI(Frame):
 		machine = self.get_selected_machine()
 		if not machine:
 			return
-		col = colorchooser.askcolor()
+		col = tk.colorchooser.askcolor()
 		if not col[0]:
 			return
 		machine.set_color(col[0])
@@ -489,7 +489,7 @@ class GUI(Frame):
 		machine = self.get_selected_machine()
 		if not machine:
 			return
-		col = colorchooser.askcolor()
+		col = tk.colorchooser.askcolor()
 		if not col[0]:
 			return
 		# Default color is (180, 180, 180), left upper in PN color chooser
@@ -505,7 +505,7 @@ class GUI(Frame):
 		# Select import file
 		opts = {"filetypes": [("PN export files", "*.pnsave.zip"), ("All files", "*.*")]}
 		opts["initialdir"] = util.solve_savedir()
-		importfilename = filedialog.askopenfilename(**opts)
+		importfilename = tk.filedialog.askopenfilename(**opts)
 		if not importfilename:
 			return
 		# See if the _main.db is in the same directory, or let user select correct directory
@@ -515,7 +515,7 @@ class GUI(Frame):
 			mainfile = os.path.join(str(opts["initialdir"]), "_main.db")
 		if not os.path.exists(mainfile):
 			opts["filetypes"] = [("PN main database", "_main.db"), ("All files", ".*")]
-			mainfile = filedialog.askopenfilename(**opts)
+			mainfile = tk.filedialog.askopenfilename(**opts)
 			if not mainfile:
 				return
 		if not os.path.exists(mainfile):
@@ -590,6 +590,6 @@ class GUI(Frame):
 		self.update_statustext("Done.")
 
 if __name__ == "__main__":
-	window = Tk()
+	window = tk.Tk()
 	app = GUI(window)
 	window.mainloop()
