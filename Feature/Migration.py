@@ -20,7 +20,7 @@ Created on Aug 15, 2022
 import shutil, os, re
 import zipfile, sqlite3, json
 
-def save_export(current_file:str) -> tuple():
+def save_export(log, current_file:str) -> tuple():
 	zipdir = os.path.dirname(current_file)
 	save_id = re.search(r"_(\d+)\.db$", current_file).group(1)
 
@@ -48,26 +48,31 @@ def save_export(current_file:str) -> tuple():
 	myzip.write(current_file, arcname=stripped_name)
 	myzip.writestr("meta.json", json.dumps(metadata))
 	myzip.close()
-	return zipname, zipdir
 
-def save_import(mainfile:str, importfilename:str) -> tuple:
-	# See if the _main.db is in the same directory, or let user select correct directory
-	# Load _main.db
-	dbconnector = sqlite3.connect(mainfile)
-	maindb = dbconnector.cursor()
-	maindb.execute("select max(id) from saves")
-	next_id = maindb.fetchone()[0] + 1
+	log("Exported current save to %s\n in %s" % (zipname, zipdir))
 
-	# Load zip
-	with zipfile.ZipFile(importfilename) as myzip:
-		myzip.extract("save_00.db")
-		# TODO detect correct file name scheme from existing saves
-		shutil.move("save_00.db", os.path.join(os.path.dirname(mainfile), "save_%i.db" % next_id))
-		metajson = myzip.read("meta.json")
-		meta = json.loads(metajson)
-		maindb.execute(
-			"insert into saves (type, id_master_autosave, name, created, modified, base_seed_string, "
-			"world_name) values (:type, -1, :name, :created, :modified, :base_seed_string, :world_name)",
-			meta)
-		dbconnector.commit()
-	return meta, next_id
+def save_import(log, mainfile:str, importfilename:str) -> tuple:
+	try:
+		# Load _main.db
+		dbconnector = sqlite3.connect(mainfile)
+		maindb = dbconnector.cursor()
+		maindb.execute("select max(id) from saves")
+		next_id = maindb.fetchone()[0] + 1
+
+		# Load zip
+		with zipfile.ZipFile(importfilename) as myzip:
+			myzip.extract("save_00.db")
+			# TODO detect correct file name scheme from existing saves
+			shutil.move("save_00.db", os.path.join(os.path.dirname(mainfile), "save_%i.db" % next_id))
+			metajson = myzip.read("meta.json")
+			meta = json.loads(metajson)
+			maindb.execute(
+				"insert into saves (type, id_master_autosave, name, created, modified, base_seed_string, "
+				"world_name) values (:type, -1, :name, :created, :modified, :base_seed_string, :world_name)",
+				meta)
+			dbconnector.commit()
+			log("Imported %s game '%s' as id %i" % (meta["type"], meta["name"], next_id))
+	except RuntimeError:
+		log("Could not load the exported file.\n Maybe the bzip2 extension is missing.")
+	except OSError:
+		log("Could not create the file")

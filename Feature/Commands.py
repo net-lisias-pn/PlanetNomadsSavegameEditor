@@ -18,6 +18,18 @@ Created on Oct 2, 2022
 		along with PlanetNomadsSavegameEditor /L. If not, see <https://www.gnu.org/licenses/>.
 '''
 
+def do_it(log, savegame):
+	commands = get_commands(savegame)
+	log("Found {:d} Commands. Executing.".format(len(commands)))
+
+	executed = execute_commands(savegame, commands)
+	log("{:d} Commands were executed with success. Cleaning up.".format(len(executed)))
+
+	cleanup_commands(savegame, executed)
+
+	savegame.save()
+	log("Done.")
+
 def get_commands(savegame) -> list:
 	r = list()
 	for m in savegame.machines:

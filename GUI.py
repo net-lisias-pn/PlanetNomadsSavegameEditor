@@ -16,7 +16,6 @@
 		along with PlanetNomadsSavegameEditor /L. If not, see <https://www.gnu.org/licenses/>.
 '''
 import os, traceback, re
-from math import sqrt
 
 import tkinter as tk
 from tkinter import filedialog
@@ -26,7 +25,7 @@ from tkinter import ttk
 import _tkinter
 
 import PlanetNomads.SaveDirectory as PNSD
-from Feature import Backup, Kickstarter, Map3D, Migration, Commands
+from Feature import Backup, Kickstarter, Map3D, Migration, Commands, Machine, Player
 
 import PlanetNomads
 
@@ -331,13 +330,7 @@ class GUI(tk.Frame):
 		machine = self.get_selected_machine(False)
 		if not machine:
 			return
-		machine_coords = machine.get_coordinates()
-		player_coords = self.savegame.get_player_position()
-		x = machine_coords[0] - player_coords[0]
-		y = machine_coords[1] - player_coords[1]
-		z = machine_coords[2] - player_coords[2]
-		distance = sqrt(x**2 + y**2 + z**2)
-		self.update_statustext("Selected machine %s, distance to player %.1f" % (machine.get_name_or_id(), distance))
+		Machine.distance_from_player(self.update_statustext, self.savegame, machine)
 
 	def teleport_machine(self):
 		machine_id = self.get_selected_machine_id()
@@ -355,25 +348,7 @@ class GUI(tk.Frame):
 			self.update_statustext("Please use only numbers in the teleport distance")
 			return
 
-		target_machine = None
-		active_machine = None
-		for machine in self.savegame.machines:
-			if machine.identifier == machine_id:
-				active_machine = machine
-				if not target_id:
-					target_machine = machine  # Relative to its current position
-				if target_machine:
-					break  # We found both or do not need a target
-			if machine.identifier == target_id:
-				target_machine = machine
-				if active_machine:
-					break  # We found both
-		if not active_machine:
-			self.update_statustext("Something broke, did not find machine")
-			return
-		active_machine.teleport(distance, target_machine)
-		self.update_statustext("Machine {} teleported".format(active_machine.get_name_or_id()))
-		self.savegame.save()
+		Machine.teleport(self.update_statustext, self.savegame, machine_id, target_id, distance)
 
 	def init_cheat_buttons(self, gui_main_frame):
 		gui_cheats_frame = ttk.Frame(gui_main_frame)
@@ -478,10 +453,7 @@ class GUI(tk.Frame):
 			print(m)
 
 	def unlock_recipes(self):
-		if self.savegame.unlock_recipes():
-			self.update_statustext("All blocks unlocked")
-		else:
-			self.update_statustext("Nothing unlocked. Is this a survival save?")
+		Player.unlock_recipes(self.update_statustext, self.savegame)
 
 	def create_north_beacon(self):
 		self.savegame.create_north_pole_beacon()
@@ -492,23 +464,11 @@ class GUI(tk.Frame):
 		self.update_statustext("3 beacons created, north pole + 2x equator")
 
 	def list_inventory(self):
-		inventory = self.savegame.get_player_inventory()
-		stacks = inventory.get_stacks()
-		for slot in stacks:
-			print("Slot {}: {} {}".format(slot, stacks[slot].get_count(), stacks[slot].get_item_name()))
+		Player.list_inventory(self.update_statustext, self.savegame)
 
 	def create_item(self, item_id, amount=100):
-		inventory = self.savegame.get_player_inventory()
-		if not inventory:
-			self.update_statustext("Could not load inventory")
-			return
-		item = PlanetNomads.Item(item_id)
-
-		if not inventory.add_stack(item, amount):
-			tk.messagebox.showerror(message="Could not create resource. All slots full?")
-			return
-		self.update_statustext("Added {} to inventory".format(item.get_name()))
-		inventory.save()
+		if not Player.create_item(self.update_statustext, self.savegame, item_id, amount):
+			tk.messagebox.showerror(message="Could not create resource {}. All slots full?".format(item_id))
 
 	def create_mk4_equipment(self):
 		self.create_item(118, 1)
@@ -526,9 +486,7 @@ class GUI(tk.Frame):
 		machine = self.get_selected_machine()
 		if not machine:
 			return
-		machine.randomize_color()
-		self.update_statustext("Machine {} color changed".format(machine.get_name_or_id()))
-		self.savegame.save()
+		Machine.randomize_color(self.update_statustext, self.savegame, machine)
 
 	def change_machine_color(self):
 		machine = self.get_selected_machine()
@@ -537,9 +495,8 @@ class GUI(tk.Frame):
 		col = tk.colorchooser.askcolor()
 		if not col[0]:
 			return
-		machine.set_color(col[0])
-		self.update_statustext("Machine {} color changed".format(machine.get_name_or_id()))
-		self.savegame.save()
+
+		Machine.change_color(self.update_statustext, self.savegame, machine, col[0])
 
 	def replace_machine_color(self):
 		machine = self.get_selected_machine()
@@ -548,14 +505,11 @@ class GUI(tk.Frame):
 		col = tk.colorchooser.askcolor()
 		if not col[0]:
 			return
-		# Default color is (180, 180, 180), left upper in PN color chooser
-		machine.set_color(col[0], (180, 180, 180))
-		self.update_statustext("Machine {} color changed".format(machine.get_name_or_id()))
-		self.savegame.save()
+
+		Machine.replace_color(self.update_statustext, self.savegame, machine, col[0])
 
 	def export_save(self):
-		zipname, zipdir = Migration.save_export(self.current_file)
-		self.update_statustext("Exported current save to %s\n in %s" % (zipname, zipdir))
+		Migration.save_export(self.update_statustext, self.current_file)
 
 	def import_save(self):
 		# Select import file
@@ -578,13 +532,7 @@ class GUI(tk.Frame):
 			self.update_statustext("Can't import without _main.db")
 			return
 
-		try:
-			meta, next_id = Migration.save_import(mainfile, importfilename)
-			self.update_statustext("Imported %s game '%s' as id %i" % (meta["type"], meta["name"], next_id))
-		except RuntimeError:
-			self.update_statustext("Could not load the exported file.\n Maybe the bzip2 extension is missing.")
-		except OSError:
-			self.update_statustext("Could not create the file")
+		Migration.save_import(self.update_statustext, mainfile, importfilename)
 
 	def on_hotbar_selected(self, *args):
 		selected = self.gui_selected_hotbar_identifier.get()
@@ -633,17 +581,7 @@ class GUI(tk.Frame):
 			traceback.print_exc()
 
 	def execute_commands(self):
-		self.update_statustext("Searching for Commands.")
-		commands = Commands.get_commands(self.savegame)
-
-		self.update_statustext("Found {:d}. Executing.".format(len(commands)))
-		executed = Commands.execute_commands(self.savegame, commands)
-
-		self.update_statustext("{:d} Commands were executed with success. Cleaning up.".format(len(executed)))
-		Commands.cleanup_commands(self.savegame, executed)
-
-		self.savegame.save()
-		self.update_statustext("Done.")
+		Commands.do_it(self.update_statustext, self.savegame)
 
 if __name__ == "__main__":
 	window = tk.Tk()
