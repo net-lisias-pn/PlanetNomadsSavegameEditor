@@ -23,7 +23,7 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter import ttk
 import _tkinter
 
-from PlanetNomads.SaveDirectory import util
+import PlanetNomads.SaveDirectory as PNSD
 from Feature import Backup, Kickstarter, Map3D, Migration, Commands
 
 import PlanetNomads
@@ -504,7 +504,7 @@ class GUI(Frame):
 	def import_save(self):
 		# Select import file
 		opts = {"filetypes": [("PN export files", "*.pnsave.zip"), ("All files", "*.*")]}
-		opts["initialdir"] = util.solve_savedir()
+		opts["initialdir"] = PNSD.util.solve_savedir()
 		importfilename = tk.filedialog.askopenfilename(**opts)
 		if not importfilename:
 			return
