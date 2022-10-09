@@ -36,7 +36,8 @@ class Savegame:
 		self.dbconnector = None
 		self.db = None
 		self.__machines = []
-		self.settings = None
+		self.__settings = None
+		self.__game_mode = None
 		atexit.register(self.cleanup)
 
 	def __del__(self):
@@ -97,18 +98,33 @@ class Savegame:
 			return [float(x) for x in line.split(" ")[:3]]
 		raise IOError("Player data not found in simple_storage")
 
-	def get_setting(self, name):
-		if not self.settings:
+	@property
+	def settings(self):
+		if not self.__settings:
 			self.db.execute("select value from simple_storage where key='advanced_settings'")
 			try:
-				self.settings = ETree.fromstring(self.db.fetchone()["value"])
+				self.__settings = ETree.fromstring(self.db.fetchone()["value"])
 			except TypeError:
 				# Old games don't have advanced settings in simple storage
 				return None
+		return self.__settings
+
+	def get_setting(self, name):
 		for tag in self.settings:
 			if tag.tag == name:
 				return tag.text
 		return None
+
+	@property
+	def game_mode(self):
+		if not self.__game_mode:
+			self.db.execute("select value from simple_storage where key='gameMode'")
+			try:
+				self.__game_mode = self.db.fetchone()["value"]
+			except TypeError:
+				# Old games don't have advanced settings in simple storage
+				return None
+		return self.__game_mode
 
 	@property
 	def machines(self):
@@ -170,7 +186,7 @@ class Savegame:
 	def get_player_inventory(self):
 		inventory = Container(self.db, self.on_save)
 		if not inventory.load(0):
-			return
+			return Container(self.db, self.on_save)
 		return inventory
 
 	def create_north_pole_beacon(self):

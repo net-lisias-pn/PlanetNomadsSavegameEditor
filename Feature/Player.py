@@ -46,5 +46,32 @@ def create_item(log, savegame, item_id, amount=100):
 	inventory.save()
 	return True
 
+__player_is_ridding_vehicle = None
+def is_ridding_vehicle(log, savegame) -> bool:
+	global __player_is_ridding_vehicle
+	if None != __player_is_ridding_vehicle:
+		return __player_is_ridding_vehicle
+
+	savegame.db.execute("select value from simple_storage where key='playerVehicle'")
+	try:
+		value = savegame.db.fetchone()["value"]
+		__player_is_ridding_vehicle = (-1 != value.find("True"))
+	except TypeError:
+		# Old games don't have advanced settings in simple storage
+		# Assume the worst
+		return True
+	return __player_is_ridding_vehicle
+
+
 def remove_inventory(log, savegame):
-	pass
+	savegame.db.execute("update containers set content='v:1,' where id=0")
+	savegame.dbconnector.commit()
+
+	inventory = savegame.get_player_inventory()
+	if not inventory:
+		log("Could not load inventory")
+		return
+
+	inventory.get_stacks().clear()
+	inventory.save()
+	log("Player's inventory was emptied.")

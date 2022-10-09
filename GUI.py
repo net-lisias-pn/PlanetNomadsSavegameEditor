@@ -25,7 +25,7 @@ from tkinter import ttk
 import _tkinter
 
 import PlanetNomads.SaveDirectory as PNSD
-from Feature import Backup, Kickstarter, Map3D, Migration, Commands, Machine, Player
+from Feature import Backup, Kickstarter, Map3D, Migration, Commands, Machine, Player, SuicidalMode
 
 import PlanetNomads
 
@@ -240,6 +240,11 @@ class GUI(tk.Frame):
 										command=self.execute_commands)
 		gui_command_button.grid(sticky=(tk.E, tk.W))
 		self.locked_buttons.append(gui_command_button)
+
+		gui_suicidal_button = ttk.Button(gui_frame, text="Implement Suicidal Mode",
+										command=self.suicidal_mode)
+		gui_suicidal_button.grid(sticky=(tk.E, tk.W))
+		self.locked_buttons.append(gui_suicidal_button)
 
 		return gui_frame
 
@@ -582,6 +587,13 @@ class GUI(tk.Frame):
 
 	def execute_commands(self):
 		Commands.do_it(self.update_statustext, self.savegame)
+
+	def suicidal_mode(self):
+		if not SuicidalMode.check_requirements(self.update_statustext, self.savegame) :
+			tk.messagebox.showerror(message="Could not implement Suicidal Mode on loaded savegame!\n\nCheck the status box for the reasons.")
+			return
+		SuicidalMode.implement(self.update_statustext, self.savegame)
+
 
 if __name__ == "__main__":
 	window = tk.Tk()
