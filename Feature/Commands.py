@@ -22,7 +22,7 @@ def do_it(log, savegame):
 	commands = get_commands(savegame)
 	log("Found {:d} Commands. Executing.".format(len(commands)))
 
-	executed = execute_commands(savegame, commands)
+	executed = execute_commands(log, savegame, commands)
 	log("{:d} Commands were executed with success. Cleaning up.".format(len(executed)))
 
 	cleanup_commands(savegame, executed)
@@ -42,7 +42,7 @@ def get_commands(savegame) -> list:
 				r.append((m, b, cmd, parm))
 	return r
 
-def execute_commands(savegame, commands) -> list:
+def execute_commands(log, savegame, commands) -> list:
 	r = list()
 	for command in commands:
 		machine = command[0]
@@ -56,6 +56,7 @@ def execute_commands(savegame, commands) -> list:
 				__remove_transformations(savegame, 'terrain', machine.get_coordinates(), parm)
 				r.append((machine, block))
 			except Exception as e:
+				log_cmd_failure(log, machine, cmd, parm)
 				print(str(e))
 			continue
 		if cmd.lower() == "restore_terrain":
@@ -63,6 +64,7 @@ def execute_commands(savegame, commands) -> list:
 				__remove_transformations(savegame, 'terrain', machine.get_coordinates(), parm)
 				r.append((machine, block))
 			except Exception as e:
+				log_cmd_failure(log, machine, cmd, parm)
 				print(str(e))
 			continue
 		if cmd.lower() == "restore_grass":
@@ -70,8 +72,10 @@ def execute_commands(savegame, commands) -> list:
 				__remove_transformations(savegame, 'grass', machine.get_coordinates(), parm)
 				r.append((machine, block))
 			except Exception as e:
+				log_cmd_failure(log, machine, cmd, parm)
 				print(str(e))
 			continue
+		log_cmd_unrecognized(log, machine, cmd, parm)
 	return r
 
 def cleanup_commands(savegame, command_holders:list):
@@ -119,3 +123,8 @@ def __remove_transformations(savegame, kind:str, coord:tuple, radius:float):
 		savegame.db.execute("delete from {:s} where idChunk=? and p_x=? and p_y=? and p_z=?".format(table), v)
 	savegame.dbconnector.commit()
 
+def log_cmd_unrecognized(log, machine, cmd, parms):
+	log("Command {:s} at {:s} with parms {:s} wasn't recognized!".format(str(cmd), repr(machine.get_coordinates()), str(parms)))
+
+def log_cmd_failure(log, machine, cmd, parms, e:Exception):
+	log("Command {:s} at {:s} with parms {:s} failed due {:s}!".format(str(cmd), repr(machine.get_coordinates()), str(parms), str(e)))
