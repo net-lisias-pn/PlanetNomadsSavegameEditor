@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 		This file is part of PlanetNomadsSavegameEditor /L
-			© 2022 LisiasT
+			© 2022-2024 LisiasT
 			© 2017-2018 black silence
 
 		PlanetNomadsSavegameEditor /L is licensed as follows:
@@ -29,7 +29,7 @@ from Feature import Backup, Kickstarter, Map3D, Migration, Commands, Machine, Pl
 
 import PlanetNomads
 
-version = '1.5.0'
+version = '1.6.0'
 
 class OpenGameDialog(Dialog):
 	def __init__(self, parent):

@@ -1,5 +1,15 @@
 # PlanetNomadsSavegameEditor :: Change Log
 
+* 2024-0619: 1.6.0 (Lisias) for PN >= 1.0.7.2
+	+ Now you can select the savegame by name!!
+	+ Implements "Suicidal Mode"
+		- no quests, no wrecks, nothing. It's you and some basic inventory against a pristine planet. Survive! 
+		- Known Issue: the game is recreating the Quests, Blueprints and Wrecks. I need to learn how to set all Quests as done!
+	+ Logging errors on executing commands.
+	+ Refactorings:
+		- Better `tkinter` handling
+		- Better handling the directory where savegames are stored
+		- Better code organisation (no "business logic" on the "presentation layer")
 * 2022-1002: 1.5.0 (Lisias) for PN >= 1.0.7.2
 	+ Refactoring
 		- Each feature is now on its own Module.
